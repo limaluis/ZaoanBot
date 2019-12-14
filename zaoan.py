@@ -39,11 +39,11 @@ async def on_message(message):
         if len(jogadores) > 0:
             profit = calc_profit_total()
 
-        profit_individual = round(profit/len(jogadores), 4)
+            profit_individual = round(profit/len(jogadores), 4)
         
-        print(profit, profit_individual)
+            print(profit, profit_individual)
 
-        jogadores.clear()
+            jogadores.clear()
 
 def adiciona_jogador(message):
     infos_jogador = []
