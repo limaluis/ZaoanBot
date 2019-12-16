@@ -3,6 +3,7 @@ import logging
 import re
 import json
 import jogador
+import math
 
 logging.basicConfig(level=logging.INFO)
 
@@ -28,10 +29,12 @@ async def on_message(message):
         return
 
     if message.content.startswith('!hello'):
-        embed = discord.Embed(title="Title", description="Hello World", color=0x00ff00)
+        embed = discord.Embed(title="Title", description="Hello World", color=discord.Color.dark_grey)
         embed.add_field(name="Field1", value="Hello", inline=False)
         embed.add_field(name="Field2", value="World", inline=False)
-        await message.channel.send(embed=embed)
+        emoji = '\U0001F4F0'
+        msg = await message.channel.send(embed=embed)
+        await msg.add_reaction(emoji)
 
     if message.content.startswith('!calc'):
         adiciona_jogador(message.content)
@@ -41,9 +44,63 @@ async def on_message(message):
 
             profit_individual = round(profit/len(jogadores), 4)
         
-            print(profit, profit_individual)
+            await message.channel.send('Profit: {}. Por pessoa: {}.'.format(math.floor(profit), math.floor(profit_individual)))
 
+            if (profit > 0):
+                for i in range(len(jogadores)):
+                    if jogadores[i].waste <= profit_individual:
+                        continue
+                    
+                    transferirValor = round(jogadores[i].balance - profit_individual, 4)
+                    for x in range(len(jogadores)):
+                        if (i != x and jogadores[x].waste < profit_individual):
+                            if (transferirValor + jogadores[x].waste <= profit_individual):
+                                logging.info('Tranferindo tudo menos profit_individual')
+                                await message.channel.send('{}, transfer {} to {}'.format(jogadores[i].nome, math.floor(transferirValor), jogadores[x].nome))
+                                jogadores[i].waste -= transferirValor
+                                logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
+                                jogadores[x].waste += transferirValor
+                                logging.info('Jogador que recebeu: {}, novo waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
+                            else:
+                                logging.info('Transferir parte')
+                                logging.info('Jogador que deve transferir - {}, waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
+                                logging.info('Jogador que deve receber - {}, waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
+                                transferir = round(abs(jogadores[x].waste - profit_individual), 4)
+                                logging.info('Transferir: {}.'.format(transferir))
+                                await message.channel.send('{} transfer {} to {}'.format(jogadores[i].nome, math.floor(transferir), jogadores[x].nome))
+                                jogadores[i].waste -= transferir
+                                logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
+                                jogadores[x].waste += transferir
+                                logging.info('Jogador que recebeu: {}, novo waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
+            else:
+                for i in range(len(jogadores)):
+                    if jogadores[i].waste <= profit_individual:
+                        continue
+
+                    transferirValor = round(jogadores[i].waste + abs(profit_individual), 4)
+                    for x in range(len(jogadores)):
+                        if (x != i) and (jogadores[x].waste < profit_individual):
+                            if (jogadores[x].waste + transferirValor <= profit_individual):
+                                logging.info('Transferir tudo menos profit_individual')
+                                await message.channel.send('{}, transfer {} to {}'.format(jogadores[i].nome, math.floor(transferirValor), jogadores[x].nome))
+                                jogadores[i].waste -= transferirValor
+                                logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
+                                jogadores[x].waste += transferirValor
+                                logging.info('Jogador que recebeu: {}, novo waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
+                            else:
+                                logging.info('Transferir parte')
+                                logging.info('Jogador que deve transferir - {}, waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
+                                logging.info('Jogador que deve receber - {}, waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
+                                transferir = round(abs(jogadores[x].waste - profit_individual), 4)
+                                logging.info('Transferir: {}.'.format(transferir))
+                                await message.channel.send('{} transfer {} to {}'.format(jogadores[i].nome, math.floor(transferir), jogadores[x].nome))
+                                jogadores[i].waste -= transferir
+                                logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
+                                jogadores[x].waste += transferir
+                                logging.info('Jogador que recebeu: {}, novo waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
             jogadores.clear()
+        else:
+            await message.channel.send('Não foi possível adicionar os jogadores.')
 
 def adiciona_jogador(message):
     infos_jogador = []
@@ -53,13 +110,21 @@ def adiciona_jogador(message):
         infos_jogador.append(char.split('\n'))
 
     for i in range(len(infos_jogador)):
-        jogadores.append(jogador.Jogador(i, infos_jogador[i][0].strip(), infos_jogador[i][3][infos_jogador[i][3].find(':')+1:].strip().replace(',',''), 0))
+        if ('(Leader)' in infos_jogador[i][0]):
+            nome = infos_jogador[i][0][:infos_jogador[i][0].find('(')].strip()
+        else:
+            nome = infos_jogador[i][0].strip()
+
+        balance = infos_jogador[i][3][infos_jogador[i][3].find(':')+1:].strip().replace(',','')
+
+        jogadores.append(jogador.Jogador(i, nome, float(balance), float(balance)))
+        logging.info('Adicionando jogador - Nome do jogador: {}; balance: {}; waste: {};'.format(jogadores[i].nome, jogadores[i].balance, jogadores[i].waste))
 
 def calc_profit_total():
     calc_profit = 0
     for i in range(len(jogadores)):
-        calc_profit = calc_profit + float(jogadores[i].loot)
-    return calc_profit
+        calc_profit = calc_profit + float(jogadores[i].balance)
+    return math.floor(calc_profit)
 
 
 client.run(config['token'])

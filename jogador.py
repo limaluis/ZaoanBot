@@ -1,6 +1,6 @@
 class Jogador:
-    def __init__(self, id, nome, loot, waste):
+    def __init__(self, id, nome, balance, waste):
         self.id = id
         self.nome = nome
-        self.loot = loot
+        self.balance = balance
         self.waste = waste
