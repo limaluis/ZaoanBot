@@ -43,8 +43,10 @@ async def on_message(message):
             profit = calc_profit_total()
 
             profit_individual = round(profit/len(jogadores), 4)
+
+            transfer_msg = discord.Embed(title='Profit: {:,}'.format(profit), description='Por pessoa: {:,}'.format(profit_individual))
         
-            await message.channel.send('Profit: {}. Por pessoa: {}.'.format(math.floor(profit), math.floor(profit_individual)))
+            #await message.channel.send('Profit: {}. Por pessoa: {}.'.format(math.floor(profit), math.floor(profit_individual)))
 
             if (profit > 0):
                 for i in range(len(jogadores)):
@@ -56,7 +58,8 @@ async def on_message(message):
                         if (i != x and jogadores[x].waste < profit_individual):
                             if (transferirValor + jogadores[x].waste <= profit_individual):
                                 logging.info('Tranferindo tudo menos profit_individual')
-                                await message.channel.send('{}, transfer {} to {}'.format(jogadores[i].nome, math.floor(transferirValor), jogadores[x].nome))
+                                #await message.channel.send('{}, transfer {} to {}'.format(jogadores[i].nome, math.floor(transferirValor), jogadores[x].nome))
+                                transfer_msg.add_field(name=jogadores[i].nome, value='transfer {} to {}'.format(math.floor(transferirValor), jogadores[x].nome))
                                 jogadores[i].waste -= transferirValor
                                 logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
                                 jogadores[x].waste += transferirValor
@@ -67,7 +70,8 @@ async def on_message(message):
                                 logging.info('Jogador que deve receber - {}, waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
                                 transferir = round(abs(jogadores[x].waste - profit_individual), 4)
                                 logging.info('Transferir: {}.'.format(transferir))
-                                await message.channel.send('{} transfer {} to {}'.format(jogadores[i].nome, math.floor(transferir), jogadores[x].nome))
+                                #await message.channel.send('{} transfer {} to {}'.format(jogadores[i].nome, math.floor(transferir), jogadores[x].nome))
+                                transfer_msg.add_field(name=jogadores[i].nome, value='transfer {} to {}'.format(math.floor(transferir), jogadores[x].nome))
                                 jogadores[i].waste -= transferir
                                 logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
                                 jogadores[x].waste += transferir
@@ -82,7 +86,8 @@ async def on_message(message):
                         if (x != i) and (jogadores[x].waste < profit_individual):
                             if (jogadores[x].waste + transferirValor <= profit_individual):
                                 logging.info('Transferir tudo menos profit_individual')
-                                await message.channel.send('{}, transfer {} to {}'.format(jogadores[i].nome, math.floor(transferirValor), jogadores[x].nome))
+                                #await message.channel.send('{}, transfer {} to {}'.format(jogadores[i].nome, math.floor(transferirValor), jogadores[x].nome))
+                                transfer_msg.add_field(name=jogadores[i].nome, value='transfer {} to {}'.format(math.floor(transferirValor), jogadores[x].nome))
                                 jogadores[i].waste -= transferirValor
                                 logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
                                 jogadores[x].waste += transferirValor
@@ -93,11 +98,13 @@ async def on_message(message):
                                 logging.info('Jogador que deve receber - {}, waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
                                 transferir = round(abs(jogadores[x].waste - profit_individual), 4)
                                 logging.info('Transferir: {}.'.format(transferir))
-                                await message.channel.send('{} transfer {} to {}'.format(jogadores[i].nome, math.floor(transferir), jogadores[x].nome))
+                                #await message.channel.send('{} transfer {} to {}'.format(jogadores[i].nome, math.floor(transferir), jogadores[x].nome))
+                                transfer_msg.add_field(name=jogadores[i].nome, value='transfer {} to {}'.format(math.floor(transferir), jogadores[x].nome))
                                 jogadores[i].waste -= transferir
                                 logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
                                 jogadores[x].waste += transferir
                                 logging.info('Jogador que recebeu: {}, novo waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
+            await message.channel.send(embed=transfer_msg)
             jogadores.clear()
         else:
             await message.channel.send('Não foi possível adicionar os jogadores.')
