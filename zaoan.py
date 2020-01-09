@@ -45,65 +45,9 @@ async def on_message(message):
             profit_individual = round(profit/len(jogadores), 4)
 
             transfer_msg = discord.Embed(title='Profit: {:,}'.format(profit), description='Por pessoa: {:,}'.format(profit_individual))
-        
-            #await message.channel.send('Profit: {}. Por pessoa: {}.'.format(math.floor(profit), math.floor(profit_individual)))
 
-            if (profit > 0):
-                for i in range(len(jogadores)):
-                    if jogadores[i].waste <= profit_individual:
-                        continue
-                    
-                    transferirValor = round(jogadores[i].balance - profit_individual, 4)
-                    for x in range(len(jogadores)):
-                        if (i != x and jogadores[x].waste < profit_individual):
-                            if (transferirValor + jogadores[x].waste <= profit_individual):
-                                logging.info('Tranferindo tudo menos profit_individual')
-                                #await message.channel.send('{}, transfer {} to {}'.format(jogadores[i].nome, math.floor(transferirValor), jogadores[x].nome))
-                                transfer_msg.add_field(name=jogadores[i].nome, value='transfer {} to {}'.format(math.floor(transferirValor), jogadores[x].nome))
-                                jogadores[i].waste -= transferirValor
-                                logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
-                                jogadores[x].waste += transferirValor
-                                logging.info('Jogador que recebeu: {}, novo waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
-                            else:
-                                logging.info('Transferir parte')
-                                logging.info('Jogador que deve transferir - {}, waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
-                                logging.info('Jogador que deve receber - {}, waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
-                                transferir = round(abs(jogadores[x].waste - profit_individual), 4)
-                                logging.info('Transferir: {}.'.format(transferir))
-                                #await message.channel.send('{} transfer {} to {}'.format(jogadores[i].nome, math.floor(transferir), jogadores[x].nome))
-                                transfer_msg.add_field(name=jogadores[i].nome, value='transfer {} to {}'.format(math.floor(transferir), jogadores[x].nome))
-                                jogadores[i].waste -= transferir
-                                logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
-                                jogadores[x].waste += transferir
-                                logging.info('Jogador que recebeu: {}, novo waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
-            else:
-                for i in range(len(jogadores)):
-                    if jogadores[i].waste <= profit_individual:
-                        continue
+            calcula_transfers(profit, profit_individual, transfer_msg)
 
-                    transferirValor = round(jogadores[i].waste + abs(profit_individual), 4)
-                    for x in range(len(jogadores)):
-                        if (x != i) and (jogadores[x].waste < profit_individual):
-                            if (jogadores[x].waste + transferirValor <= profit_individual):
-                                logging.info('Transferir tudo menos profit_individual')
-                                #await message.channel.send('{}, transfer {} to {}'.format(jogadores[i].nome, math.floor(transferirValor), jogadores[x].nome))
-                                transfer_msg.add_field(name=jogadores[i].nome, value='transfer {} to {}'.format(math.floor(transferirValor), jogadores[x].nome))
-                                jogadores[i].waste -= transferirValor
-                                logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
-                                jogadores[x].waste += transferirValor
-                                logging.info('Jogador que recebeu: {}, novo waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
-                            else:
-                                logging.info('Transferir parte')
-                                logging.info('Jogador que deve transferir - {}, waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
-                                logging.info('Jogador que deve receber - {}, waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
-                                transferir = round(abs(jogadores[x].waste - profit_individual), 4)
-                                logging.info('Transferir: {}.'.format(transferir))
-                                #await message.channel.send('{} transfer {} to {}'.format(jogadores[i].nome, math.floor(transferir), jogadores[x].nome))
-                                transfer_msg.add_field(name=jogadores[i].nome, value='transfer {} to {}'.format(math.floor(transferir), jogadores[x].nome))
-                                jogadores[i].waste -= transferir
-                                logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
-                                jogadores[x].waste += transferir
-                                logging.info('Jogador que recebeu: {}, novo waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
             await message.channel.send(embed=transfer_msg)
             jogadores.clear()
         else:
@@ -132,6 +76,37 @@ def calc_profit_total():
     for i in range(len(jogadores)):
         calc_profit = calc_profit + float(jogadores[i].balance)
     return math.floor(calc_profit)
+
+def calcula_transfers(profit, profit_individual, transfer_msg):
+    for i in range(len(jogadores)):
+        if jogadores[i].waste <= profit_individual:
+            continue
+
+        if (profit > 0):
+            transferirValor = round(jogadores[i].balance - profit_individual, 4)
+        else:
+            transferirValor = round(jogadores[i].waste + abs(profit_individual), 4)
+
+        for x in range(len(jogadores)):
+            if (i != x and jogadores[x].waste < profit_individual):
+                if (transferirValor + jogadores[x].waste <= profit_individual):
+                    logging.info('Tranferindo tudo menos profit_individual')
+                    transfer_msg.add_field(name=jogadores[i].nome, value='transfer {} to {}'.format(abs(math.floor(transferirValor)), jogadores[x].nome))
+                    jogadores[i].waste -= transferirValor
+                    logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
+                    jogadores[x].waste += transferirValor
+                    logging.info('Jogador que recebeu: {}, novo waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
+                else:
+                    logging.info('Transferir parte')
+                    logging.info('Jogador que deve transferir - {}, waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
+                    logging.info('Jogador que deve receber - {}, waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
+                    transferir = round(abs(jogadores[x].waste - profit_individual), 4)
+                    logging.info('Transferir: {}.'.format(transferir))
+                    transfer_msg.add_field(name=jogadores[i].nome, value='transfer {} to {}'.format(abs(math.floor(transferir)), jogadores[x].nome))
+                    jogadores[i].waste -= transferir
+                    logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
+                    jogadores[x].waste += transferir
+                    logging.info('Jogador que recebeu: {}, novo waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
 
 
 client.run(config['token'])
