@@ -44,7 +44,8 @@ async def on_message(message):
 
             profit_individual = round(profit/len(jogadores), 4)
 
-            transfer_msg = discord.Embed(title='Profit: {:,}'.format(profit), description='Por pessoa: {:,}'.format(profit_individual))
+            transfer_msg = discord.Embed(title='Profit: {:,}'.format(profit), description='Por pessoa: {:,}'.format(profit_individual), color= discord.Colour.blue())
+            transfer_msg.set_thumbnail(url="https://yourtibiagold.com/img/slider/tibiaimage.png")
 
             calcula_transfers(profit, profit_individual, transfer_msg)
 
@@ -91,7 +92,7 @@ def calcula_transfers(profit, profit_individual, transfer_msg):
             if (i != x and jogadores[x].waste < profit_individual):
                 if (transferirValor + jogadores[x].waste <= profit_individual):
                     logging.info('Tranferindo tudo menos profit_individual')
-                    transfer_msg.add_field(name=jogadores[i].nome, value='transfer {} to {}'.format(abs(math.floor(transferirValor)), jogadores[x].nome))
+                    transfer_msg.add_field(name=jogadores[i].nome, value='transfer {} to {}'.format(abs(math.floor(transferirValor)), jogadores[x].nome), inline=False)
                     jogadores[i].waste -= transferirValor
                     logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
                     jogadores[x].waste += transferirValor
@@ -102,7 +103,7 @@ def calcula_transfers(profit, profit_individual, transfer_msg):
                     logging.info('Jogador que deve receber - {}, waste: {}.'.format(jogadores[x].nome, jogadores[x].waste))
                     transferir = round(abs(jogadores[x].waste - profit_individual), 4)
                     logging.info('Transferir: {}.'.format(transferir))
-                    transfer_msg.add_field(name=jogadores[i].nome, value='transfer {} to {}'.format(abs(math.floor(transferir)), jogadores[x].nome))
+                    transfer_msg.add_field(name=jogadores[i].nome, value='transfer {} to {}'.format(abs(math.floor(transferir)), jogadores[x].nome), inline=False)
                     jogadores[i].waste -= transferir
                     logging.info('Jogador que transferiu: {}, novo waste: {}.'.format(jogadores[i].nome, jogadores[i].waste))
                     jogadores[x].waste += transferir
