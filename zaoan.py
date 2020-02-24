@@ -79,9 +79,7 @@ def calc_profit_total():
     return math.floor(calc_profit)
 
 def calcula_transfers(profit, profit_individual, transfer_msg):
-    for i in range(len(jogadores)):
-        if jogadores[i].waste <= profit_individual:
-            continue
+    for i in range(len(jogadores)):       
 
         if (profit > 0):
             transferirValor = round(jogadores[i].balance - profit_individual, 4)
@@ -89,6 +87,9 @@ def calcula_transfers(profit, profit_individual, transfer_msg):
             transferirValor = round(jogadores[i].waste + abs(profit_individual), 4)
 
         for x in range(len(jogadores)):
+            if jogadores[i].waste <= profit_individual:
+                continue
+            
             if (i != x and jogadores[x].waste < profit_individual):
                 if (transferirValor + jogadores[x].waste <= profit_individual):
                     logging.info('Tranferindo tudo menos profit_individual')
